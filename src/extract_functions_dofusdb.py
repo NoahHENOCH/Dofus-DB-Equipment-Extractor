@@ -165,41 +165,68 @@ def effects_management(item: Dict[str, Any]) -> None:
             print(effect_name, effect_val1, effect_val2, item['name']['fr'], item["isDestructible"], effect['effectId'])
 
 
-def item_management(item: Dict[str, Any], category_data: Dict[str, Any]) -> None:
-    """Gère un item individuel."""
+def item_management(item: Dict[str, Any], jobs_data: Dict[str, Any]) -> None:
+    """Gère un item individuel.
+    
+    Args:
+        item (Dict[str, Any]): Les données de l'item à traiter.
+        jobs_data (Dict[str, Any]): Listes des items récupérés avec les données nécessaires d'un job.
+    """
     if (item['hasRecipe'] and  item['isDestructible']):
         #effects = effects_management(item)
-        object_data = {
+        item_data = {
             'name': item['name']['fr'],
             'level': item['level'],
             'effects': []
         }
-        category_data['items'].append(object_data)
+        jobs_data['items'].append(item_data)
 
 
-def items_management(data, category_data):
-    """Gère les items d'une catégorie."""
+def items_management(data : Dict[str, Any], jobs_data: Dict[str, Any]) -> None:
+    """Gère les items d'une catégorie.
+
+    Args:
+        data (Dict[str, Any]): Les données des items récupérées depuis l'API.
+        jobs_data (Dict[str, Any]): Listes des items récupérés avec les données nécessaires d'un job.
+    """
     for item in data['data']:
-        item_management(item, category_data)
+        item_management(item, jobs_data)
 
 
-def category_management(category_id, level_min, level_max, category_data):
-    """Gère les catégories d'items."""
+def category_management(category_id: int, level_min: int, level_max: int, jobs_data: Dict[str, Any]) -> None:
+    """Gère la catégorie d'items avec l'ID donné.
+    
+    Args:
+        category_id (int): L'ID de la catégorie d'items à traiter.
+        level_min (int): Le niveau minimum des items à récupérer.
+        level_max (int): Le niveau maximum des items à récupérer.
+        jobs_data (Dict[str, Any]): Listes des items récupérés avec les données nécessaires d'un job.
+    """
     data = get_items_data(category_id, level_min, level_max, 0)
     total = data['total']
-    items_management(data, category_data)
+    items_management(data, jobs_data)
     for i in range(10, total+1, 10):
         data = get_items_data(category_id, level_min, level_max, i)
-        items_management(data, category_data)
+        items_management(data, jobs_data)
 
         
-def job_management(job_name, level_min, level_max, jobs, results):
-    """Gère les métiers et leurs catégories."""
+def job_management(job_name: str, level_min: int, level_max: int, jobs: List[Dict[str, Any]], results: List[Dict[str, Any]]) -> None:
+    """Gère un métier spécifique récupéré avec son nom et traite les catégories associées.
+    
+    Args:
+        job_name (str): Le nom du métier à traiter.
+        level_min (int): Le niveau minimum des items à récupérer.
+        level_max (int): Le niveau maximum des items à récupérer.
+        jobs (List[Dict[str, Any]]): La liste des métiers disponibles avec une liste de catégories.
+        results (List[Dict[str, Any]]): La liste des résultats à remplir avec les données des métiers.
+    Raises:
+        JobNotFound: Si le métier avec le nom donné n'est pas trouvé dans la liste des métiers.
+    """
     job = get_job_with_name(job_name, jobs)
     if job is None:
         raise JobNotFound(f"Job '{job_name}' not found.")
     
-    category_data = {
+    jobs_data = {
         'name': job_name,
         'items': []
     }
@@ -211,16 +238,21 @@ def job_management(job_name, level_min, level_max, jobs, results):
 
     threads = []
     for cat_id in category_id:
-        thread = threaded_execution(category_management, cat_id, level_min, level_max, category_data)
+        thread = threaded_execution(category_management, cat_id, level_min, level_max, jobs_data)
         threads.append(thread)
     for thread in threads:
         stop_thread(thread)
-    category_data['items'] = flatten_items(sort_group_by_level(sort_grouped_items_by_name(group_items_by_level(category_data))))
-    results.append(category_data)
+    jobs_data['items'] = flatten_items(sort_group_by_level(sort_grouped_items_by_name(group_items_by_level(jobs_data))))
+    results.append(jobs_data)
 
 
 def try_all_jobs(jobs: List[Dict[str, Any]], results: List[Dict[str, Any]]) -> None:
-    """Essaie tous les métiers définis dans le fichier jobs.json."""
+    """Essaie tous les métiers définis dans le fichier jobs.json.
+
+    Args:
+        jobs (List[Dict[str, Any]]): La liste des métiers à traiter.
+        results (List[Dict[str, Any]]): La liste des résultats à remplir avec les données des métiers.
+    """
     threads = []
     for job in jobs:
         thread = threaded_execution(job_management, job["name"], 0, 200, jobs, results)
