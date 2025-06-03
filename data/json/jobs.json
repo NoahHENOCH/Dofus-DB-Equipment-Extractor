@@ -1,0 +1,26 @@
+[
+    {
+        "name": "Cordonnier",
+        "category_id": [10, 11]
+    },
+    {
+        "name": "Forgeron",
+        "category_id": [5, 6, 7, 8, 19, 21, 22, 271]
+    },
+    {
+        "name": "Bijoutier",
+        "category_id": [1, 9]
+    },
+    {
+        "name": "Tailleur",
+        "category_id": [16, 17]
+    },
+    {
+        "name": "Sculpteur",
+        "category_id": [2, 3, 4]
+    },
+    {
+        "name": "Façonneur",
+        "category_id": [82]
+    }
+]
