@@ -9,6 +9,7 @@ execute.exe
 favicon.ico
 README.md
 requirements.txt
+.gitignore
 data/
     csv/
     json/
