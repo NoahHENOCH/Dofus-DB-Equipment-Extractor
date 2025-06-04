@@ -1,7 +1,11 @@
 from requests import get
 from functools import cache
-from utilities import threaded_execution, stop_thread, get_print_lock
+from utilities import threaded_execution, stop_thread, get_print_lock, json_reader
 from typing import List, Dict, Any
+import re
+
+effects_name = json_reader("data/json/effectsName.json")
+
 
 class APIError(Exception):
     """Exception raised for errors in the API response."""
@@ -126,6 +130,29 @@ def get_items_data(category_id: int, level_min: int, level_max: int, skip: int) 
 
 
 @cache
+def clean_effect_name(baseeffect_name: str) -> str:
+    """
+    Supprime les # suivis d'un chiffre (1, 2 ou 3) et le contenu entre accolades {} dans le nom d'effet.
+
+    Args:
+        effect_name (str): Le nom d'effet à nettoyer.
+    Returns:
+        str: Le nom d'effet nettoyé.
+    """
+    # Supprimer les # suivis de 1, 2 ou 3
+    effect_name = re.sub(r'#([1-3])', '', baseeffect_name)
+    # Supprimer le contenu entre accolades {}
+    effect_name = re.sub(r'\{.*?\}', '', effect_name)
+    # Supprimer le contenu entre des <> (par exemple, <sprite name="feu">)
+    effect_name = re.sub(r'<.*> ', '', effect_name)
+    # Supprimer les accolades restantes
+    effect_name = re.sub(r'[{}]', '', effect_name)
+    effect_name = re.sub(r'Dommages?', 'Dommages', effect_name)
+    # Nettoyer les espaces superflus    
+    return effect_name.strip()
+
+
+@cache
 def get_effect_name(effect_id: int) -> str:
     """Récupère les informations d'un effet par son ID.
     
@@ -145,24 +172,30 @@ def get_effect_name(effect_id: int) -> str:
         raise APIError(f"Error fetching data from API: {response.status_code}")
 
 
-def effects_management(item: Dict[str, Any]) -> None:
+def effects_management(item: Dict[str, Any]) -> List[Dict[str, Any]]:
     """Gère les effets d'un item.
     
     Args:
         item (Dict[str, Any]): Les données de l'item à traiter.
+    Returns:
+        List[Dict[str, Any]]: Une liste de dictionnaires contenant les effets nettoyés de l'item.
     """
     effects = item['effects']
+    res = []
+    global effects_name
+
     for effect in effects:
         effect_val1, effect_val2 = effect['from'], effect['to']
-        if effect_val1 < 0:
+        effect_name = clean_effect_name(get_effect_name(effect['effectId']))
+        if effect_name == "Arme de chasse":
+            effect_val1, effect_val2 = 1, 1
+        if effect_val1 < 0 or (effect_val1 == 0 and effect_val2 == 0) or (effect_name not in effects_name):
             continue
         if effect_val2 == 0:
             effect_val2 = effect_val1
-        effect_name = get_effect_name(effect['effectId'])
-        if effect_name == "Arme de chasse":
-            effect_val1, effect_val2 = 1, 1
-        if effect_val1 == 0:
-            print(effect_name, effect_val1, effect_val2, item['name']['fr'], item["isDestructible"], effect['effectId'])
+        
+        res.append({'name': effect_name, 'value1': effect_val1, 'value2': effect_val2})
+    return res
 
 
 def item_management(item: Dict[str, Any], jobs_data: Dict[str, Any]) -> None:
@@ -173,12 +206,10 @@ def item_management(item: Dict[str, Any], jobs_data: Dict[str, Any]) -> None:
         jobs_data (Dict[str, Any]): Listes des items récupérés avec les données nécessaires d'un job.
     """
     if (item['hasRecipe'] and  item['isDestructible']):
-        #effects = effects_management(item)
-        item_data = {
-            'name': item['name']['fr'],
-            'level': item['level'],
-            'effects': []
-        }
+        effects = effects_management(item)
+        if (len(effects) == 0):
+            return
+        item_data = {'name': item['name']['fr'], 'level': item['level'], 'effects': effects}
         jobs_data['items'].append(item_data)
 
 
