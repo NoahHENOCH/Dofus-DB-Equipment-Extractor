@@ -15,6 +15,9 @@ class JobNotFound(Exception):
     """Exception raised when a job is not found."""
     pass
 
+class IngredientNotFound(Exception):
+    """Exception raised when an ingredient is not found in the recipe."""
+    pass
 
 def group_items_by_level(category_data: Dict[str, Any]) -> Dict[int, List[Dict[str, Any]]]:
     """Groupe les items par niveau dans une catégorie.
@@ -142,11 +145,11 @@ def clean_effect_name(baseeffect_name: str) -> str:
     # Supprimer les # suivis de 1, 2 ou 3
     effect_name = re.sub(r'#([1-3])', '', baseeffect_name)
     # Supprimer le contenu entre accolades {}
-    effect_name = re.sub(r'\{.*?\}', '', effect_name)
+    effect_name = re.sub(r'\{[^\}]*\}', '', effect_name)
     # Supprimer le contenu entre des <> (par exemple, <sprite name="feu">)
     effect_name = re.sub(r'<.*> ', '', effect_name)
     # Supprimer les accolades restantes
-    effect_name = re.sub(r'[{}]', '', effect_name)
+    effect_name = str.replace(effect_name, '}', '')
     effect_name = re.sub(r'Dommages?', 'Dommages', effect_name)
     # Nettoyer les espaces superflus    
     return effect_name.strip()
@@ -172,6 +175,7 @@ def get_effect_name(effect_id: int) -> str:
         raise APIError(f"Error fetching data from API: {response.status_code}")
 
 
+
 def effects_management(item: Dict[str, Any]) -> List[Dict[str, Any]]:
     """Gère les effets d'un item.
     
@@ -193,8 +197,76 @@ def effects_management(item: Dict[str, Any]) -> List[Dict[str, Any]]:
             continue
         if effect_val2 == 0:
             effect_val2 = effect_val1
-        
         res.append({'name': effect_name, 'value1': effect_val1, 'value2': effect_val2})
+    return res
+
+
+@cache
+def get_recipe_data(item_id: int) -> Dict[str, Any]:
+    """Récupère les données de la recette d'un item par son ID depuis l'API.
+    
+    Args:
+        item_id (int): L'ID de l'item pour lequel récupérer la recette.
+    Returns:
+        Dict[str, Any]: Les données de la recette de l'item.
+    Raises:
+        APIError: Si une erreur se produit lors de la récupération des données depuis l'API.
+    """
+    url = f"https://api.dofusdb.fr/recipes/{item_id}"
+    response = get(url)
+    if response.status_code == 200:
+        return response.json()
+    else:
+        raise APIError(f"Error fetching recipe data from API: {response.status_code}")
+
+
+def get_index_of_ingredient(ingredient_id: int, ingredients: List[Dict[str, Any]]) -> int:
+    """Retourne l'index d'un ingrédient dans la recette.
+    
+    Args:
+        ingredient_id (int): L'ID de l'ingrédient à rechercher.
+        recipe_data (Dict[str, Any]): Les données de la recette de l'item.
+    Returns:
+        int: L'index de l'ingrédient dans la liste des ingrédients de la recette.
+    Raises:
+        IngredientNotFound: Si l'ingrédient n'est pas trouvé dans la recette.
+    """
+    for ingredient in ingredients:
+        if ingredient['id'] == ingredient_id:
+            return ingredients.index(ingredient)
+    raise IngredientNotFound(f"Ingredient with ID {ingredient_id} not found in recipe.")
+
+
+@cache
+def recipe_management(item_id: int) -> List[Dict[str, Any]]:
+    """Récupère la recette d'un item par son ID.
+
+    Args:
+        item_id (int): L'ID de l'item pour lequel récupérer la recette.
+    Returns:
+        List[Dict[str, Any]]: Une liste de dictionnaires contenant les ingrédients de la recette.
+    Raises:
+        APIError: Si une erreur se produit lors de la récupération des données depuis l'API.
+    """
+    recipe_data = get_recipe_data(item_id)
+    res = {"job": recipe_data['job']['name']['fr'], "ingredients": []}
+    for i in range(len(recipe_data['ingredientIds'])):
+        quantity = recipe_data['quantities'][i]
+        ingredient_id = recipe_data['ingredientIds'][i]
+        ingredient_data = recipe_data['ingredients'][get_index_of_ingredient(ingredient_id, recipe_data['ingredients'])]
+        ingredient_recipe = None
+        ingredient_has_recipe = ingredient_data['hasRecipe']
+        ingredient_secret_recipe = ingredient_data['secretRecipe']
+        ingredient_name = ingredient_data['name']['fr']
+        if ingredient_has_recipe:
+            ingredient_recipe = recipe_management(ingredient_id)
+        res['ingredients'].append({
+            'name': ingredient_name,
+            'quantity': quantity,
+            'hasRecipe': ingredient_has_recipe,
+            'secretRecipe': ingredient_secret_recipe,
+            'recipe' : ingredient_recipe
+        })
     return res
 
 
@@ -205,11 +277,12 @@ def item_management(item: Dict[str, Any], jobs_data: Dict[str, Any]) -> None:
         item (Dict[str, Any]): Les données de l'item à traiter.
         jobs_data (Dict[str, Any]): Listes des items récupérés avec les données nécessaires d'un job.
     """
-    if (item['hasRecipe'] and  item['isDestructible']):
+    if (item['hasRecipe']) and  (item['isDestructible']) and (not item['secretRecipe']):
         effects = effects_management(item)
         if (len(effects) == 0):
             return
-        item_data = {'name': item['name']['fr'], 'level': item['level'], 'effects': effects, 'img': item['img']}
+        recipes = recipe_management(item['id'])
+        item_data = {'name': item['name']['fr'], 'level': item['level'], 'effects': effects, 'img': item['img'], "recipes": recipes}
         jobs_data['items'].append(item_data)
 
 
