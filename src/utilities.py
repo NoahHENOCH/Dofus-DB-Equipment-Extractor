@@ -51,7 +51,13 @@ def json_writer(file_path: str, data: List[Dict[str, Any]]) -> None:
 
 
 def delete_file(file_path: str) -> None:
-    """Supprime un fichier."""
+    """Supprime un fichier.
+
+    Args:
+        file_path (str): Le chemin du fichier à supprimer.
+    Raises:
+        FileError: Si le fichier n'existe pas ou s'il y a une erreur lors de la suppression.
+    """
     try:
         remove(file_path)
     except FileNotFoundError:
