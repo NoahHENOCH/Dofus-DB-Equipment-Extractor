@@ -209,7 +209,7 @@ def item_management(item: Dict[str, Any], jobs_data: Dict[str, Any]) -> None:
         effects = effects_management(item)
         if (len(effects) == 0):
             return
-        item_data = {'name': item['name']['fr'], 'level': item['level'], 'effects': effects}
+        item_data = {'name': item['name']['fr'], 'level': item['level'], 'effects': effects, 'img': item['img']}
         jobs_data['items'].append(item_data)
 
 
