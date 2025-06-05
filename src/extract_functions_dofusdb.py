@@ -231,9 +231,9 @@ def get_index_of_ingredient(ingredient_id: int, ingredients: List[Dict[str, Any]
     Raises:
         IngredientNotFound: Si l'ingrédient n'est pas trouvé dans la recette.
     """
-    for ingredient in ingredients:
+    for index, ingredient in enumerate(ingredients):
         if ingredient['id'] == ingredient_id:
-            return ingredients.index(ingredient)
+            return index
     raise IngredientNotFound(f"Ingredient with ID {ingredient_id} not found in recipe.")
 
 
