@@ -4,8 +4,10 @@ from os import remove
 from threading import Thread, Lock
 from typing import List, Dict, Any, Callable
 
-
 print_lock = None
+
+
+# FONCTIONS DE GESTION DES FICHIERS
 
 class FileError(Exception):
     """Exception raised for errors related to the file."""
@@ -50,6 +52,23 @@ def json_writer(file_path: str, data: List[Dict[str, Any]]) -> None:
         raise FileError(f"An error occurred while writing to the file: {e}")
 
 
+def file_exists(file_path: str) -> bool:
+    """Vérifie si un fichier existe.
+
+    Args:
+        file_path (str): Le chemin du fichier à vérifier.
+    Returns:
+        bool: True si le fichier existe, False sinon.
+    """
+    try:
+        with open(file_path, "r", encoding="utf-8"):
+            return True
+    except FileNotFoundError:
+        return False
+    except Exception as e:
+        raise FileError(f"An error occurred while checking the file: {e}")
+
+
 def delete_file(file_path: str) -> None:
     """Supprime un fichier.
 
@@ -66,25 +85,7 @@ def delete_file(file_path: str) -> None:
         raise FileError(f"An error occurred while deleting the file: {e}")
 
 
-def time_to_execute(func: Callable[..., Any], *args: Any, **kwargs: Any) -> Any:
-    """
-    Mesure le temps d'exécution d'une fonction.
-
-    Args:
-        func (Callable): La fonction à exécuter.
-        *args: Les arguments positionnels à passer à la fonction.
-        **kwargs: Les arguments nommés à passer à la fonction.
-
-    Returns:
-        Any: Le résultat de la fonction exécutée.
-    """
-    start_time = time()
-    result = func(*args, **kwargs)
-    end_time = time()
-    execution_time = end_time - start_time
-    print(f"Execution time: {execution_time:.2f} seconds")
-    return result
-
+# FONCTIONS DE GESTION DES THREADS
 
 def threaded_execution(func: Callable[..., Any], *args: Any, **kwargs: Any) -> Thread:
     """Exécute une fonction dans un thread.
@@ -119,3 +120,26 @@ def get_print_lock()-> Lock:
     if print_lock is None:
         print_lock = Lock()
     return print_lock
+
+
+
+# FONCTIONS GÉNÉRALES 
+
+def time_to_execute(func: Callable[..., Any], *args: Any, **kwargs: Any) -> Any:
+    """
+    Mesure le temps d'exécution d'une fonction.
+
+    Args:
+        func (Callable): La fonction à exécuter.
+        *args: Les arguments positionnels à passer à la fonction.
+        **kwargs: Les arguments nommés à passer à la fonction.
+
+    Returns:
+        Any: Le résultat de la fonction exécutée.
+    """
+    start_time = time()
+    result = func(*args, **kwargs)
+    end_time = time()
+    execution_time = end_time - start_time
+    print(f"Execution time: {execution_time:.2f} seconds")
+    return result
