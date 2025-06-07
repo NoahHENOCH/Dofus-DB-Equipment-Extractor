@@ -220,20 +220,20 @@ def get_recipe_data(item_id: int) -> Dict[str, Any]:
         raise APIError(f"Error fetching recipe data from API: {response.status_code}")
 
 
-def get_index_of_ingredient(ingredient_id: int, ingredients: List[Dict[str, Any]]) -> int:
-    """Retourne l'index d'un ingrédient dans la recette.
+def get_ingredient_with_id(ingredient_id: int, ingredients: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Retourne les données d'un ingrédient dans la recette par son ID.
     
     Args:
         ingredient_id (int): L'ID de l'ingrédient à rechercher.
         recipe_data (Dict[str, Any]): Les données de la recette de l'item.
     Returns:
-        int: L'index de l'ingrédient dans la liste des ingrédients de la recette.
+        Dict[str, Any]: Les données de l'ingrédient correspondant à l'ID.
     Raises:
         IngredientNotFound: Si l'ingrédient n'est pas trouvé dans la recette.
     """
-    for index, ingredient in enumerate(ingredients):
+    for ingredient in ingredients:
         if ingredient['id'] == ingredient_id:
-            return index
+            return ingredient
     raise IngredientNotFound(f"Ingredient with ID {ingredient_id} not found in recipe.")
 
 
@@ -253,7 +253,7 @@ def recipe_management(item_id: int) -> List[Dict[str, Any]]:
     for i in range(len(recipe_data['ingredientIds'])):
         quantity = recipe_data['quantities'][i]
         ingredient_id = recipe_data['ingredientIds'][i]
-        ingredient_data = recipe_data['ingredients'][get_index_of_ingredient(ingredient_id, recipe_data['ingredients'])]
+        ingredient_data = get_ingredient_with_id(ingredient_id, recipe_data['ingredients'])
         ingredient_recipe = None
         ingredient_has_recipe = ingredient_data['hasRecipe']
         ingredient_secret_recipe = ingredient_data['secretRecipe']
