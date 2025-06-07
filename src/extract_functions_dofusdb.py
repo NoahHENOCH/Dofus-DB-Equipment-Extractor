@@ -350,16 +350,18 @@ def job_management(job_name: str, level_min: int, level_max: int, jobs: List[Dic
     results.append(jobs_data)
 
 
-def try_all_jobs(jobs: List[Dict[str, Any]], results: List[Dict[str, Any]]) -> None:
-    """Essaie tous les métiers définis dans le fichier jobs.json.
+def try_all_jobs(level_min: int, level_max: int, jobs: List[Dict[str, Any]], results: List[Dict[str, Any]]) -> None:
+    """Essaye de traiter tous les métiers disponibles.
 
     Args:
-        jobs (List[Dict[str, Any]]): La liste des métiers à traiter.
+        level_min (int): Le niveau minimum des items à récupérer.
+        level_max (int): Le niveau maximum des items à récupérer.
+        jobs (List[Dict[str, Any]]): La liste des métiers disponibles avec une liste de catégories.
         results (List[Dict[str, Any]]): La liste des résultats à remplir avec les données des métiers.
     """
     threads = []
     for job in jobs:
-        thread = threaded_execution(job_management, job["name"], 0, 200, jobs, results)
+        thread = threaded_execution(job_management, job["name"], level_min, level_max, jobs, results)
         threads.append(thread)
     for thread in threads:
         stop_thread(thread)
