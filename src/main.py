@@ -2,6 +2,7 @@ from extract_functions_dofusdb import job_management, try_all_jobs
 from typing import List, Dict, Any
 from utilities import json_reader, json_writer, time_to_execute, file_exists
 
+RESULTS_FILE = "data/json/results.json"
 
 class EndOfExecution(Exception):
     """Exception raised to indicate the end of execution."""
@@ -17,7 +18,7 @@ def prompt_overwrite_results() -> bool:
     Raises:
         EndOfExecution: If the user decides to quit the extraction process.
     """
-    if file_exists("data/json/results.json"):
+    if file_exists(RESULTS_FILE):
         while True:
             ans = input("results.json file already exists. Do you want to extract new datas? (y/n/q): ").lower()
             if ans == "q":
@@ -89,6 +90,7 @@ def extract_management() -> List[Dict[str, Any]]:
     results = []
 
     if not prompt_overwrite_results():
+        results = json_reader(RESULTS_FILE)
         return results
 
     jobs = json_reader("data/json/jobs.json")
@@ -102,7 +104,7 @@ def extract_management() -> List[Dict[str, Any]]:
     else:
         print(f"Extracting job {jobs[int(ansj)]['name']}...")
         job_management(jobs[int(ansj)]['name'], ans_lvl_min, ans_lvl_max, jobs, results)
-    json_writer("data/json/results.json", results)
+    json_writer(RESULTS_FILE, results)
     return results
 
 
@@ -114,6 +116,7 @@ def main() -> None:
     except EndOfExecution:
         print("Execution terminated by user.")
         return
+    print(len(results))
 
 
 if __name__ == "__main__":
