@@ -1,8 +1,8 @@
 from requests import get
 from functools import cache
-from utilities import threaded_execution, stop_thread, get_print_lock, json_reader
 from typing import List, Dict, Any
 import re
+from utilities import threaded_execution, stop_thread, get_print_lock, json_reader, json_writer, file_exists
 
 effects_name = json_reader("data/json/effectsName.json")
 
@@ -18,6 +18,11 @@ class JobNotFound(Exception):
 class IngredientNotFound(Exception):
     """Exception raised when an ingredient is not found in the recipe."""
     pass
+
+class EndOfExecution(Exception):
+    """Exception raised to indicate the end of execution."""
+    def __init__(self):
+        super().__init__("Execution terminated by user.")
 
 def group_items_by_level(category_data: Dict[str, Any]) -> Dict[int, List[Dict[str, Any]]]:
     """Groupe les items par niveau dans une catégorie.
@@ -134,8 +139,7 @@ def get_items_data(category_id: int, level_min: int, level_max: int, skip: int) 
 
 @cache
 def clean_effect_name(baseeffect_name: str) -> str:
-    """
-    Supprime les # suivis d'un chiffre (1, 2 ou 3) et le contenu entre accolades {} dans le nom d'effet.
+    """Supprime les # suivis d'un chiffre (1, 2 ou 3) et le contenu entre accolades {} dans le nom d'effet.
 
     Args:
         effect_name (str): Le nom d'effet à nettoyer.
@@ -365,3 +369,104 @@ def try_all_jobs(level_min: int, level_max: int, jobs: List[Dict[str, Any]], res
         threads.append(thread)
     for thread in threads:
         stop_thread(thread)
+
+
+def prompt_overwrite_results(result_file: str) -> bool:
+    """Prompt user if they want to overwrite results.json.
+    
+    Returns:
+        bool: True if the user wants to overwrite, False otherwise.
+    Raises:
+        EndOfExecution: If the user decides to quit the extraction process.
+    """
+    if file_exists(result_file):
+        while True:
+            ans = input("results.json file already exists. Do you want to extract new datas? (y/n/q): ").lower()
+            if ans == "q":
+                raise EndOfExecution()
+            if ans in ["y", "n"]:
+                return ans == "y"
+    return True
+
+
+def prompt_job_selection(jobs: List[Dict[str, Any]]) -> str:
+    """Prompt user to select a job or all jobs.
+    
+    Args:
+        jobs (List[Dict[str, Any]]): List of jobs to choose from.
+    Returns:
+        str: The selected job index or 'a' for all jobs.
+    Raises:
+        EndOfExecution: If the user decides to quit the extraction process.
+    """
+    possible_jobs = ["a"]
+    msg_jobs = "q. Quit\na. All jobs\n"
+    for index, job in enumerate(jobs):
+        msg_jobs += f"{index}. {job['name']}\n"
+        possible_jobs.append(str(index))
+    msg = f"Available jobs:\n{msg_jobs}Select a job to extract data : "
+    while True:
+        ansj = input(msg).lower()
+        if ansj == "q":
+            raise EndOfExecution()
+        if ansj in possible_jobs:
+            return ansj
+
+
+def prompt_level(prompt_text: str, min_value: int, max_value: int) -> int:
+    """Prompt user for a level input within a range.
+    
+    Args:
+        prompt_text (str): The text to display in the prompt.
+        min_value (int): The minimum acceptable value.
+        max_value (int): The maximum acceptable value.
+    Returns:
+        int: The validated level input from the user.
+    Raises:
+        EndOfExecution: If the user decides to quit the extraction process.
+    """
+    while True:
+        try:
+            ans = input(prompt_text)
+            if ans == "q":
+                raise EndOfExecution()
+            ans_int = int(ans)
+            if min_value <= ans_int <= max_value:
+                return ans_int
+            else:
+                print(f"Invalid input. Please enter a number between {min_value} and {max_value}.")
+        except ValueError:
+            print(f"Invalid input. Please enter a number between {min_value} and {max_value}.")
+
+
+def extract_management(result_file: str) -> List[Dict[str, Any]]:
+    """Gestion de l'extraction des données
+
+    Args:
+        result_file (str): Le chemin du fichier de résultats où les données extraites seront stockées.
+
+    Returns:
+        List[Dict[str, Any]]: A list of dictionaries containing the extracted data.
+    Raises:
+        EndOfExecution: If the user decides to quit the extraction process.
+    """
+    print("Starting extraction management...")
+    results = []
+
+    if not prompt_overwrite_results(result_file):
+        results = json_reader(result_file)
+        return results
+
+    jobs = json_reader("data/json/jobs.json")
+    ansj = prompt_job_selection(jobs)
+    ans_lvl_min = prompt_level("Enter the minimum level (0-200, q to quit): ", 0, 200)
+    ans_lvl_max = prompt_level(f"Enter the maximum level ({ans_lvl_min}-200, q to quit): ", ans_lvl_min, 200)
+
+    if ansj == "a":
+        print("Extracting all jobs...")
+        try_all_jobs(ans_lvl_min, ans_lvl_max, jobs, results)
+    else:
+        print(f"Extracting job {jobs[int(ansj)]['name']}...")
+        job_management(jobs[int(ansj)]['name'], ans_lvl_min, ans_lvl_max, jobs, results)
+    json_writer(result_file, results)
+    return results
