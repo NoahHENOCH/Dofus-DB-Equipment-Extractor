@@ -1,8 +1,9 @@
-import json
-from time import time
-from os import remove
-from threading import Thread, Lock
+from json import load as json_load, dump as json_dump, JSONDecodeError
+from time import time as time_time
+from os import remove as os_remove
+from threading import Thread as threading_Thread, Lock as threading_Lock
 from typing import List, Dict, Any, Callable
+from pyperclip import copy as pyperclip_copy
 
 print_lock = None
 
@@ -26,10 +27,10 @@ def json_reader(file_path: str) -> List[Dict[str, Any]]:
     print(f"Reading JSON file: {file_path}")
     try:
         with open(file_path, "r", encoding="utf-8") as file:  # Ajout de encoding="utf-8"
-            return json.load(file)
+            return json_load(file)
     except FileNotFoundError:
         raise FileError(f"File {file_path} not found.")
-    except json.JSONDecodeError:
+    except JSONDecodeError:
         raise FileError(f"Error decoding JSON from file {file_path}.")
     except Exception as e:
         raise FileError(f"An error occurred while reading the file: {e}")
@@ -47,7 +48,7 @@ def json_writer(file_path: str, data: List[Dict[str, Any]]) -> None:
     print(f"Writing JSON file: {file_path}")
     try:
         with open(file_path, "w", encoding="utf-8") as file:  # Ajout de encoding="utf-8"
-            json.dump(data, file, indent=4, ensure_ascii=False)
+            json_dump(data, file, indent=4, ensure_ascii=False)
     except Exception as e:
         raise FileError(f"An error occurred while writing to the file: {e}")
 
@@ -78,7 +79,7 @@ def delete_file(file_path: str) -> None:
         FileError: Si le fichier n'existe pas ou s'il y a une erreur lors de la suppression.
     """
     try:
-        remove(file_path)
+        os_remove(file_path)
     except FileNotFoundError:
         raise FileError(f"File {file_path} not found.")
     except Exception as e:
@@ -87,7 +88,7 @@ def delete_file(file_path: str) -> None:
 
 # FONCTIONS DE GESTION DES THREADS
 
-def threaded_execution(func: Callable[..., Any], *args: Any, **kwargs: Any) -> Thread:
+def threaded_execution(func: Callable[..., Any], *args: Any, **kwargs: Any) -> threading_Thread:
     """Exécute une fonction dans un thread.
     
     Args:
@@ -95,30 +96,30 @@ def threaded_execution(func: Callable[..., Any], *args: Any, **kwargs: Any) -> T
         *args: Les arguments positionnels à passer à la fonction.
         **kwargs: Les arguments nommés à passer à la fonction.
     Returns:
-        Thread: L'objet Thread créé pour exécuter la fonction.
+        threading_Thread: L'objet Thread créé pour exécuter la fonction.
     """
-    thread = Thread(target=func, args=args, kwargs=kwargs)
+    thread = threading_Thread(target=func, args=args, kwargs=kwargs)
     thread.start()
     return thread
 
 
-def stop_thread(thread: Thread) -> None:
+def stop_thread(thread: threading_Thread) -> None:
     """Attend la fin d'un thread.
     Args:
-        thread (Thread): Le thread à arrêter.
+        thread (threading_Thread): Le thread à arrêter.
     """
     thread.join()
 
 
-def get_print_lock()-> Lock:
+def get_print_lock()-> threading_Lock:
     """Obtient un verrou pour les impressions.
     
     Returns:
-        Lock: Un verrou pour synchroniser les impressions.
+        threading_Lock: Un verrou pour synchroniser les impressions.
     """
     global print_lock
     if print_lock is None:
-        print_lock = Lock()
+        print_lock = threading_Lock()
     return print_lock
 
 
@@ -126,8 +127,7 @@ def get_print_lock()-> Lock:
 # FONCTIONS GÉNÉRALES 
 
 def time_to_execute(func: Callable[..., Any], *args: Any, **kwargs: Any) -> Any:
-    """
-    Mesure le temps d'exécution d'une fonction.
+    """Mesure le temps d'exécution d'une fonction.
 
     Args:
         func (Callable): La fonction à exécuter.
@@ -137,9 +137,24 @@ def time_to_execute(func: Callable[..., Any], *args: Any, **kwargs: Any) -> Any:
     Returns:
         Any: Le résultat de la fonction exécutée.
     """
-    start_time = time()
+    start_time = time_time()
     result = func(*args, **kwargs)
-    end_time = time()
+    end_time = time_time()
     execution_time = end_time - start_time
     print(f"Execution time: {execution_time:.2f} seconds")
     return result
+
+
+def copy_text(text: str) -> None:
+    """Copie du texte dans le presse-papiers.
+    
+    Args:
+        text (str): Le texte à copier.
+    """
+    try:
+        pyperclip_copy(text)
+        print("Text copied to clipboard.")
+    except ImportError:
+        print("pyperclip module is not installed. Please install it to use this feature.")
+    except Exception as e:
+        print(f"An error occurred while copying text: {e}")

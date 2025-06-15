@@ -1,7 +1,7 @@
-from requests import get
-from functools import cache
+from requests import get as requests_get
+from functools import cache as functools_cache
+from re import sub as re_sub
 from typing import List, Dict, Any
-import re
 from utilities import threaded_execution, stop_thread, get_print_lock, json_reader, json_writer, file_exists
 
 effects_name = json_reader("data/json/effectsName.json")
@@ -129,7 +129,7 @@ def get_items_data(category_id: int, level_min: int, level_max: int, skip: int) 
         '$skip': skip,      # Pagination
         'lang': 'fr'        # Langue de la réponse
     }
-    response = get(url, params=params)
+    response = requests_get(url, params=params)
     if response.status_code == 200:
         data = response.json()
         return data
@@ -137,7 +137,7 @@ def get_items_data(category_id: int, level_min: int, level_max: int, skip: int) 
         raise APIError(f"Error fetching data from API: {response.status_code}")
 
 
-@cache
+@functools_cache
 def clean_effect_name(baseeffect_name: str) -> str:
     """Supprime les # suivis d'un chiffre (1, 2 ou 3) et le contenu entre accolades {} dans le nom d'effet.
 
@@ -147,19 +147,19 @@ def clean_effect_name(baseeffect_name: str) -> str:
         str: Le nom d'effet nettoyé.
     """
     # Supprimer les # suivis de 1, 2 ou 3
-    effect_name = re.sub(r'#([1-3])', '', baseeffect_name)
+    effect_name = re_sub(r'#([1-3])', '', baseeffect_name)
     # Supprimer le contenu entre accolades {}
-    effect_name = re.sub(r'\{[^\}]*\}', '', effect_name)
+    effect_name = re_sub(r'\{[^\}]*\}', '', effect_name)
     # Supprimer le contenu entre des <> (par exemple, <sprite name="feu">)
-    effect_name = re.sub(r'<.*> ', '', effect_name)
+    effect_name = re_sub(r'<.*> ', '', effect_name)
     # Supprimer les accolades restantes
     effect_name = str.replace(effect_name, '}', '')
-    effect_name = re.sub(r'Dommages?', 'Dommages', effect_name)
+    effect_name = re_sub(r'Dommages?', 'Dommages', effect_name)
     # Nettoyer les espaces superflus    
     return effect_name.strip()
 
 
-@cache
+@functools_cache
 def get_effect_name(effect_id: int) -> str:
     """Récupère les informations d'un effet par son ID.
     
@@ -171,7 +171,7 @@ def get_effect_name(effect_id: int) -> str:
         APIError: Si une erreur se produit lors de la récupération des données depuis l'API.
     """
     url = "https://api.dofusdb.fr/effects/"+str(effect_id)
-    response = get(url)
+    response = requests_get(url)
     if response.status_code == 200:
         data = response.json()
         return data["description"]["fr"]
@@ -205,7 +205,7 @@ def effects_management(item: Dict[str, Any]) -> List[Dict[str, Any]]:
     return res
 
 
-@cache
+@functools_cache
 def get_recipe_data(item_id: int) -> Dict[str, Any]:
     """Récupère les données de la recette d'un item par son ID depuis l'API.
     
@@ -217,7 +217,7 @@ def get_recipe_data(item_id: int) -> Dict[str, Any]:
         APIError: Si une erreur se produit lors de la récupération des données depuis l'API.
     """
     url = f"https://api.dofusdb.fr/recipes/{item_id}"
-    response = get(url)
+    response = requests_get(url)
     if response.status_code == 200:
         return response.json()
     else:
@@ -241,7 +241,7 @@ def get_ingredient_with_id(ingredient_id: int, ingredients: List[Dict[str, Any]]
     raise IngredientNotFound(f"Ingredient with ID {ingredient_id} not found in recipe.")
 
 
-@cache
+@functools_cache
 def recipe_management(item_id: int) -> List[Dict[str, Any]]:
     """Récupère la recette d'un item par son ID.
 
