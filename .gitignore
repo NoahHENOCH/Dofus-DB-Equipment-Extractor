@@ -1,3 +1,6 @@
 data/json/results.json
+data/json/equipments.json
+data/json/ingredients_price.json
+data/json/recipes_price.json
 src/__pycache__
 venv/
