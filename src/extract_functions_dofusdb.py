@@ -262,6 +262,7 @@ def recipe_management(item_id: int) -> List[Dict[str, Any]]:
         ingredient_has_recipe = ingredient_data['hasRecipe']
         ingredient_secret_recipe = ingredient_data['secretRecipe']
         ingredient_name = ingredient_data['name']['fr']
+        img = ingredient_data['img']
         if ingredient_has_recipe:
             ingredient_recipe = recipe_management(ingredient_id)
         res['ingredients'].append({
@@ -269,7 +270,8 @@ def recipe_management(item_id: int) -> List[Dict[str, Any]]:
             'quantity': quantity,
             'hasRecipe': ingredient_has_recipe,
             'secretRecipe': ingredient_secret_recipe,
-            'recipe' : ingredient_recipe
+            'recipe' : ingredient_recipe,
+            'img': img
         })
     return res
 
@@ -469,4 +471,5 @@ def extract_management(result_file: str) -> List[Dict[str, Any]]:
         print(f"Extracting job {jobs[int(ansj)]['name']}...")
         job_management(jobs[int(ansj)]['name'], ans_lvl_min, ans_lvl_max, jobs, results)
     json_writer(result_file, results)
+    print(f"Extraction completed. Data saved to {result_file}")
     return results

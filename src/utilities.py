@@ -61,6 +61,7 @@ def file_exists(file_path: str) -> bool:
     Returns:
         bool: True si le fichier existe, False sinon.
     """
+    print(f"Checking if file exists: {file_path}")
     try:
         with open(file_path, "r", encoding="utf-8"):
             return True
