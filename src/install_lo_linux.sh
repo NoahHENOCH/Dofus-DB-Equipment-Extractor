@@ -19,20 +19,20 @@ case $OS in
         echo "--- Préparation pour Debian/Ubuntu ---"
         
         echo "1. Mise à jour des listes de paquets..."
-        sudo apt-get update
+        apt-get update
 
         echo "2. Installation de l'outil de gestion intelligente 'aptitude'..."
         # On utilise apt-get ici juste pour installer aptitude si absent
-        sudo apt-get install -y aptitude
+        apt-get install -y aptitude
 
         echo "3. Mise à jour complète du système (Full Upgrade)..."
         # full-upgrade gère mieux les changements de dépendances que upgrade simple
-        sudo aptitude full-upgrade -y
+        aptitude full-upgrade -y
 
         echo "4. Installation des dépendances avec Aptitude..."
         # Aptitude est meilleur pour résoudre les conflits (ex: libgtk-3, qt5)
         # L'option -y accepte la solution proposée par défaut.
-        sudo aptitude install -y \
+        aptitude install -y \
             git build-essential zip ccache junit4 libkrb5-dev nasm \
             graphviz python3 python3-dev python3-setuptools qtbase5-dev \
             libkf5coreaddons-dev libkf5i18n-dev libkf5config-dev \
@@ -44,18 +44,18 @@ case $OS in
             libxt-dev meson gcc-12 g++-12
 
         echo "5. Configuration de GCC 12..."
-        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 60 --slave /usr/bin/g++ g++ /usr/bin/g++-12
+        update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 60 --slave /usr/bin/g++ g++ /usr/bin/g++-12
         ;;
 
     fedora|rhel|centos)
         echo "Installation des dépendances pour Fedora/RHEL..."
-        sudo dnf builddep -y libreoffice
-        sudo dnf install -y meson
+        dnf builddep -y libreoffice
+        dnf install -y meson
         ;;
 
     arch|manjaro)
         echo "Installation des dépendances pour Arch Linux..."
-        sudo pacman -S --needed --noconfirm base-devel git ccache ant apr beanshell \
+        pacman -S --needed --noconfirm base-devel git ccache ant apr beanshell \
         bluez-libs clucene coin-or-mp cppunit curl dbus-glib desktop-file-utils \
         doxygen flex gcc-libs gdb glm gobject-introspection gperf gpgme graphite \
         gst-plugins-base-libs gtk3 harfbuzz-icu hicolor-icon-theme hunspell hyphen \
@@ -71,7 +71,7 @@ case $OS in
 
     suse*|opensuse*)
         echo "Installation des dépendances pour openSUSE..."
-        sudo zypper in -y git autoconf automake bison make gcc gcc-c++ cups-devel \
+        zypper in -y git autoconf automake bison make gcc gcc-c++ cups-devel \
         fontconfig-devel gperf java-17-openjdk-devel libxslt-devel python3-devel \
         krb5-devel libX11-devel libXext-devel libICE-devel libSM-devel libXt-devel \
         libXrender-devel libXrandr-devel flex gtk3-devel gstreamer-devel \
