@@ -283,7 +283,7 @@ def item_management(item: Dict[str, Any], jobs_data: Dict[str, Any]) -> None:
         item (Dict[str, Any]): Les données de l'item à traiter.
         jobs_data (Dict[str, Any]): Listes des items récupérés avec les données nécessaires d'un job.
     """
-    if (item['hasRecipe']) and  (item['isDestructible']) and (not item['secretRecipe']):
+    if (item['hasRecipe']) and (not item['secretRecipe']):
         effects = effects_management(item)
         if (len(effects) == 0):
             return
