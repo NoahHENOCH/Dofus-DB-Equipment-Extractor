@@ -3,7 +3,6 @@ from time import time as time_time
 from os import remove as os_remove
 from threading import Thread as threading_Thread, Lock as threading_Lock
 from typing import List, Dict, Any, Callable
-from pyperclip import copy as pyperclip_copy
 
 print_lock = None
 
@@ -144,18 +143,3 @@ def time_to_execute(func: Callable[..., Any], *args: Any, **kwargs: Any) -> Any:
     execution_time = end_time - start_time
     print(f"Execution time: {execution_time:.2f} seconds")
     return result
-
-
-def copy_text(text: str) -> None:
-    """Copie du texte dans le presse-papiers.
-    
-    Args:
-        text (str): Le texte à copier.
-    """
-    try:
-        pyperclip_copy(text)
-        print("Text copied to clipboard.")
-    except ImportError:
-        print("pyperclip module is not installed. Please install it to use this feature.")
-    except Exception as e:
-        print(f"An error occurred while copying text: {e}")

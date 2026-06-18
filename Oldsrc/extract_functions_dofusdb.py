@@ -283,7 +283,7 @@ def item_management(item: Dict[str, Any], jobs_data: Dict[str, Any]) -> None:
         item (Dict[str, Any]): Les données de l'item à traiter.
         jobs_data (Dict[str, Any]): Listes des items récupérés avec les données nécessaires d'un job.
     """
-    if (item['hasRecipe']) and  (item['isDestructible']) and (not item['secretRecipe']):
+    if (item['hasRecipe']) and (not item['secretRecipe']):
         effects = effects_management(item)
         if (len(effects) == 0):
             return
@@ -373,24 +373,6 @@ def try_all_jobs(level_min: int, level_max: int, jobs: List[Dict[str, Any]], res
         stop_thread(thread)
 
 
-def prompt_overwrite_results(result_file: str) -> bool:
-    """Prompt user if they want to overwrite results.json.
-    
-    Returns:
-        bool: True if the user wants to overwrite, False otherwise.
-    Raises:
-        EndOfExecution: If the user decides to quit the extraction process.
-    """
-    if file_exists(result_file):
-        while True:
-            ans = input("results.json file already exists. Do you want to extract new datas? (y/n/q): ").lower()
-            if ans == "q":
-                raise EndOfExecution()
-            if ans in ["y", "n"]:
-                return ans == "y"
-    return True
-
-
 def prompt_job_selection(jobs: List[Dict[str, Any]]) -> str:
     """Prompt user to select a job or all jobs.
     
@@ -415,7 +397,7 @@ def prompt_job_selection(jobs: List[Dict[str, Any]]) -> str:
             return ansj
 
 
-def prompt_level(prompt_text: str, min_value: int, max_value: int) -> int:
+def prompt_level(min_value: int, max_value: int) -> int:
     """Prompt user for a level input within a range.
     
     Args:
@@ -429,7 +411,7 @@ def prompt_level(prompt_text: str, min_value: int, max_value: int) -> int:
     """
     while True:
         try:
-            ans = input(prompt_text)
+            ans = input(f"Enter a level between {min_value} and {max_value} (q to quit): ")
             if ans == "q":
                 raise EndOfExecution()
             ans_int = int(ans)
@@ -453,23 +435,24 @@ def extract_management(result_file: str) -> List[Dict[str, Any]]:
         EndOfExecution: If the user decides to quit the extraction process.
     """
     print("Starting extraction management...")
-    results = []
 
-    if not prompt_overwrite_results(result_file):
-        results = json_reader(result_file)
-        return results
+    results = {
+        "recipes": [],
+        "ingredients": [],
+        "equipment": []
+    }
 
     jobs = json_reader("data/json/jobs.json")
     ansj = prompt_job_selection(jobs)
-    ans_lvl_min = prompt_level("Enter the minimum level (0-200, q to quit): ", 0, 200)
-    ans_lvl_max = prompt_level(f"Enter the maximum level ({ans_lvl_min}-200, q to quit): ", ans_lvl_min, 200)
+    ans_lvl_min = prompt_level(0, 200)
+    ans_lvl_max = prompt_level(ans_lvl_min, 200)
 
     if ansj == "a":
         print("Extracting all jobs...")
         try_all_jobs(ans_lvl_min, ans_lvl_max, jobs, results)
     else:
         print(f"Extracting job {jobs[int(ansj)]['name']}...")
-        job_management(jobs[int(ansj)]['name'], ans_lvl_min, ans_lvl_max, jobs, results)
+        job_management(jobs[int(ansj)]['name'], ans_lvl_min, ans_lvl_max, jobs, results["recipes"])
     json_writer(result_file, results)
     print(f"Extraction completed. Data saved to {result_file}")
     return results

@@ -8,8 +8,6 @@ python3 -m venv venv
 # Activer l'environnement virtuel
 source venv/bin/activate
 
-# Mettre à jour pip
-python -m pip install --upgrade pip
 
 # Installer les dépendances si requirements.txt existe
 if [ -f requirements.txt ]; then
