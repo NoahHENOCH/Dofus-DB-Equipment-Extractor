@@ -1,0 +1,42 @@
+{
+  "_id": "69a716ba96df4304dfdd7b31",
+  "id": 125,
+  "iconId": 0,
+  "characteristic": 11,
+  "category": 0,
+  "characteristicOperator": "+",
+  "showInTooltip": false,
+  "useDice": true,
+  "forceMinMax": true,
+  "boost": true,
+  "active": false,
+  "oppositeId": 153,
+  "theoreticalPattern": 1,
+  "showInSet": true,
+  "parametersFixed": 0,
+  "bonusType": 1,
+  "useInFight": false,
+  "effectPriority": 5000,
+  "effectPowerRate": 0.200000002980232,
+  "elementId": -1,
+  "isInPercent": false,
+  "hideValueInTooltip": false,
+  "textIconReferenceId": 10,
+  "effectTriggerDuration": 0,
+  "actionFiltersId": [13],
+  "description": {
+    "id": "1066464",
+    "de": "#1{{~1~2 bis +}}#2 Vitalität",
+    "en": "#1{{~1~2 to }}#2 Vitality",
+    "es": "#1{{~1~2 a }}#2 vitalidad",
+    "fr": "#1{{~1~2 à }}#2 Vitalité",
+    "pt": "#1{{~1~2 a }}#2 Vitalidade"
+  },
+  "theoreticalDescription": {
+    "id": "0"
+  },
+  "className": "EffectData",
+  "m_id": 125,
+  "createdAt": "2026-03-03T17:13:30.365Z",
+  "updatedAt": "2026-05-19T12:30:01.931Z"
+}

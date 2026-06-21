@@ -1,0 +1,55 @@
+{
+  "id": 2440,
+  "level": 30,
+  "itemSetId": 4,
+  "recipeSlots": 3,
+  "recipeIds": [],
+  "recyclingNuggets": 0.7,
+  "name": {
+    "id": "995837",
+    "fr": "Épée Royale du Bouftou"
+  },
+  "secretRecipe": false,
+  "isSaleable": true,
+  "isLegendary": false,
+  "className": "WeaponData",
+  "hasRecipe": true,
+  "effects": [
+    {
+      "from": 4,
+      "to": 8,
+      "effectId": 97
+    },
+    {
+      "from": 4,
+      "to": 8,
+      "effectId": 99
+    },
+    {
+      "from": 4,
+      "to": 8,
+      "effectId": 96
+    },
+    {
+      "from": 4,
+      "to": 8,
+      "effectId": 98
+    },
+    {
+      "from": 31,
+      "to": 40,
+      "effectId": 125
+    },
+    {
+      "from": 21,
+      "to": 30,
+      "effectId": 138
+    },
+    {
+      "from": 2,
+      "to": 3,
+      "effectId": 753
+    }
+  ],
+  "img": "https://api.dofusdb.fr/img/items/6030.png"
+}
