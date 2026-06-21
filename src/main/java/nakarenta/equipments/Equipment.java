@@ -8,7 +8,6 @@ import nakarenta.NakarentaException;
 
 public class Equipment {
     private int id;
-    private int idApi;
     private int idCategory;
     private String name;
     private String job;
@@ -17,18 +16,19 @@ public class Equipment {
     private int idPrice = -1;
     private int idRecipe;
     private List<Integer> idEffects;
+    private int weight;
 
 
-    public Equipment(int id, int idApi, int idCategory, String name, String imgLink, int level) throws NakarentaException {
-        this.id = id;
-        this.idApi = idApi;
+    public Equipment(int idApi, int idCategory, String name, String imgLink, int level, int weight) throws NakarentaException {
+        this.id = idApi;
         this.idCategory = idCategory;
         this.name = name;
         this.job = Jobs.getJobName(idCategory);
         this.imgLink = imgLink;
         this.level = level;
+        this.weight = weight;
         this.idEffects = new ArrayList<>();
-        System.out.println("Équipement ajouté : " + this.name + " (id=" + this.id + ", catégorie=" + this.idCategory + ", métier=" + this.job + ", niveau=" + this.level + ")");
+        System.out.println("Équipement ajouté : " + this.name + " (id=" + this.id + ", catégorie=" + this.idCategory + ", métier=" + this.job + ", niveau=" + this.level + ", poids=" + this.weight + ")");
     }
 
 

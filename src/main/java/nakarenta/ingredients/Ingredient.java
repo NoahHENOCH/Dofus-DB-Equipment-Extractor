@@ -7,6 +7,8 @@ public class Ingredient {
     private boolean hasRecipe;
     private boolean isEquipment;
     private int idRecipe = -1;
+    private int idEquipment = -1;
+    private int weight;
 
 
     public int getId() {

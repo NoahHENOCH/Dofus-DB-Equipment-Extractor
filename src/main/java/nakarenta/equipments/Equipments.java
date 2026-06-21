@@ -11,8 +11,6 @@ import nakarenta.NakarentaException;
 public class Equipments {
     private static Equipments instance = null;
     private Map<Integer, Equipment> equipmentsMap = null;
-    int nbEquipments = 0;
-
 
     private Equipments() {
         equipmentsMap = new HashMap<>();
@@ -48,12 +46,12 @@ public class Equipments {
         String imgLink = jObject.get("img").getAsString();
         int level = jObject.get("level").getAsInt();
         int idApi = jObject.get("id").getAsInt();
+        int weight = jObject.get("realWeight").getAsInt();
 
-        Equipment equipment = new Equipment(equipments.nbEquipments++, idApi, idCategory, name, imgLink, level);
+        Equipment equipment = new Equipment(idApi, idCategory, name, imgLink, level, weight);
 
         Effects.addEffectsToEquipment(equipment, jObject.get("effects").getAsJsonArray());
 
-        
         if (equipment.effectsCount() == 0) {
             return;
         }
